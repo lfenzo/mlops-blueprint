@@ -19,6 +19,17 @@ services:
       "jupyter lab --ip=0.0.0.0 --port 8888  --allow-root --no-browser --notebook-dir=/jupyter"
     ]
 
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mlflow-backend-store
+    ports:
+      - 5432:5432
+    volumes:
+      - ./mlflow-data:/var/lib/postgresql/data:z
+
   minio:
     image: minio/minio:latest
     environment:
@@ -36,10 +47,9 @@ services:
       context: ./mlflow
     depend_on:
       - minio
+      - postgres
     ports:
       - 5000:5000
-    volumes:
-      - ./mlflow-data:/mlflow/data:z
     environment:
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
       AWS_ACCESS_KEY_ID: hcEl4N7cZdIogrAQyI7v
@@ -47,7 +57,7 @@ services:
     command: [
       "mlflow",
       "server",
-      "--backend-store-uri", "sqlite:///mlflow/data/mlflow.db",
+      "--backend-store-uri", "postgresql://postgres:postgres@postgres/mlflow-backend-store",
       "--default-artifact-root", "s3://mlflow-artifacts",
       "--host", "0.0.0.0"
     ]
