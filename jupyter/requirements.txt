@@ -1,0 +1,10 @@
+boto3
+pandas
+numpy
+scikit-learn
+mlflow
+
+# jupyter requirements
+jupyterlab
+jupyterlab_vim
+jupyterlab-execute-time

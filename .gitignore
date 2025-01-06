@@ -1,0 +1,6 @@
+# automatically created
+.ipynb_checkpoints/
+
+# automatically populated
+mlflow-artifacts/data/
+mlflow-data/mlflow.db

@@ -1,0 +1,54 @@
+version: "3"
+services:
+
+  jupyter:
+    build:
+      context: ./jupyter
+    volumes:
+      - ./jupyter:/jupyter:z
+    ports:
+      - 8888:8888
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+    command: [
+      "bash",
+      "-c",
+      "jupyter lab --ip=0.0.0.0 --port 8888  --allow-root --no-browser --notebook-dir=/jupyter"
+    ]
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - 9000:9000  # S3 API port
+      - 9001:9001  # web ui
+    volumes:
+      - ./mlflow-artifacts/data:/data:z
+    command: server /data --console-address ":9001"
+
+  mlflow:
+    build:
+      context: ./mlflow
+    ports:
+      - 5000:5000
+    volumes:
+      - ./mlflow-data:/mlflow/data:z
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+    command: [
+      "mlflow",
+      "server",
+      "--backend-store-uri", "sqlite:///mlflow/data/mlflow.db",
+      "--default-artifact-root", "s3://mlflow-artifacts",
+      "--host", "0.0.0.0"
+    ]
