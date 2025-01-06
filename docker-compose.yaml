@@ -11,10 +11,8 @@ services:
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-      AWS_ACCESS_KEY_ID: minioadmin
-      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_ACCESS_KEY_ID: QtR5ZC8fNqsggdvPeRLK
+      AWS_SECRET_ACCESS_KEY: edKG4rP0ZgEd6cbHEjg7ZVml37hTQagXwx4PinNO
     command: [
       "bash",
       "-c",
@@ -36,15 +34,16 @@ services:
   mlflow:
     build:
       context: ./mlflow
+    depend_on:
+      - minio
     ports:
       - 5000:5000
     volumes:
       - ./mlflow-data:/mlflow/data:z
     environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: minioadmin
-      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_ACCESS_KEY_ID: hcEl4N7cZdIogrAQyI7v
+      AWS_SECRET_ACCESS_KEY: WhnfkbPTQO5y6JbBBh1BJa4cZu9SJA9idLHORGI4
     command: [
       "mlflow",
       "server",
