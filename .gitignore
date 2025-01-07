@@ -3,6 +3,7 @@
 
 # automatically populated
 mlflow/artifacts/data/
-mlflow/data/
+mlflow/data/*
+!mlflow/data/.env
 
 feast/data/

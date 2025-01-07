@@ -8,10 +8,8 @@ x-podman:
 services:
   postgres-mlflow:
     image: postgres:latest
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: mlflow-backend-store
+    env_file:
+      - ./mlflow/data/.env
     ports:
       - 5432:5432
     volumes:
@@ -20,9 +18,8 @@ services:
 
   minio:
     image: minio/minio:latest
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+    env_file:
+      - ./mlflow/artifacts/.env
     ports:
       - 9000:9000  # S3 API port
       - 9001:9001  # web ui
@@ -35,13 +32,11 @@ services:
       context: ./mlflow/server
     depend_on:
       - minio
-      - postgres
+      - postgres-mlflow
     ports:
       - 5000:5000
-    environment:
-      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: uYZgyaQZPpSSCTBpJT3z
-      AWS_SECRET_ACCESS_KEY: kgk4B3nFPTXrsjGZCRpF0B7Na8YXXywHXhCEjRRt
+    env_file:
+      - ./mlflow/server/.env
     command: [
       "mlflow",
       "server",

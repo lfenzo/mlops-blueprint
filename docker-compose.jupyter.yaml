@@ -8,11 +8,8 @@ services:
       - ./jupyter:/jupyter:z
     ports:
       - 8888:8888
-    environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
-      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: uYZgyaQZPpSSCTBpJT3z
-      AWS_SECRET_ACCESS_KEY: kgk4B3nFPTXrsjGZCRpF0B7Na8YXXywHXhCEjRRt
+    env_file:
+      - ./jupyter/.env
     command: [
       "bash",
       "-c",
