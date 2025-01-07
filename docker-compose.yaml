@@ -11,8 +11,8 @@ services:
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: QtR5ZC8fNqsggdvPeRLK
-      AWS_SECRET_ACCESS_KEY: edKG4rP0ZgEd6cbHEjg7ZVml37hTQagXwx4PinNO
+      AWS_ACCESS_KEY_ID: uYZgyaQZPpSSCTBpJT3z
+      AWS_SECRET_ACCESS_KEY: kgk4B3nFPTXrsjGZCRpF0B7Na8YXXywHXhCEjRRt
     command: [
       "bash",
       "-c",
@@ -28,7 +28,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ./mlflow-data:/var/lib/postgresql/data:z
+      - ./mlflow/data:/var/lib/postgresql/data:z
 
   minio:
     image: minio/minio:latest
@@ -39,12 +39,12 @@ services:
       - 9000:9000  # S3 API port
       - 9001:9001  # web ui
     volumes:
-      - ./mlflow-artifacts/data:/data:z
+      - ./mlflow/artifacts/data:/data:z
     command: server /data --console-address ":9001"
 
   mlflow:
     build:
-      context: ./mlflow
+      context: ./mlflow/server
     depend_on:
       - minio
       - postgres
@@ -52,8 +52,8 @@ services:
       - 5000:5000
     environment:
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: hcEl4N7cZdIogrAQyI7v
-      AWS_SECRET_ACCESS_KEY: WhnfkbPTQO5y6JbBBh1BJa4cZu9SJA9idLHORGI4
+      AWS_ACCESS_KEY_ID: uYZgyaQZPpSSCTBpJT3z
+      AWS_SECRET_ACCESS_KEY: kgk4B3nFPTXrsjGZCRpF0B7Na8YXXywHXhCEjRRt
     command: [
       "mlflow",
       "server",

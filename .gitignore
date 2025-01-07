@@ -2,5 +2,5 @@
 .ipynb_checkpoints/
 
 # automatically populated
-mlflow-artifacts/data/
-mlflow-data/mlflow.db
+mlflow/artifacts/data/
+mlflow/data/
