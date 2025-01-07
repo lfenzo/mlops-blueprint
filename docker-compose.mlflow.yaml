@@ -1,25 +1,7 @@
 version: "3"
 services:
 
-  jupyter:
-    build:
-      context: ./jupyter
-    volumes:
-      - ./jupyter:/jupyter:z
-    ports:
-      - 8888:8888
-    environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
-      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: uYZgyaQZPpSSCTBpJT3z
-      AWS_SECRET_ACCESS_KEY: kgk4B3nFPTXrsjGZCRpF0B7Na8YXXywHXhCEjRRt
-    command: [
-      "bash",
-      "-c",
-      "jupyter lab --ip=0.0.0.0 --port 8888  --allow-root --no-browser --notebook-dir=/jupyter"
-    ]
-
-  postgres:
+  postgres-mlflow:
     image: postgres:latest
     environment:
       POSTGRES_USER: postgres
@@ -57,7 +39,7 @@ services:
     command: [
       "mlflow",
       "server",
-      "--backend-store-uri", "postgresql://postgres:postgres@postgres/mlflow-backend-store",
+      "--backend-store-uri", "postgresql://postgres:postgres@postgres-mlflow/mlflow-backend-store",
       "--default-artifact-root", "s3://mlflow-artifacts",
       "--host", "0.0.0.0"
     ]
