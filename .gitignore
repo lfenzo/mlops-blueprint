@@ -4,3 +4,5 @@
 # automatically populated
 mlflow/artifacts/data/
 mlflow/data/
+
+feast/data/

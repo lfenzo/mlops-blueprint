@@ -1,14 +1,27 @@
 version: "3"
-services:
 
+# necessary to set userns_mode: "keep-id" (used only for postgres)
+# see https://github.com/containers/podman-compose/issues/166 for details
+x-podman:
+  in_pod: false
+
+services:
   postgres-feast:
     image: postgres:latest
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: feature-database
+      POSTGRES_DB: feast-database
     ports:
       - 5433:5432
     volumes:
       - ./feast/data:/var/lib/postgresql/data:z
+    userns_mode: "keep-id"
 
+  feast:
+    build:
+      context: ./feast
+    ports:
+      - 8889:8888
+    volumes:
+      - ./feast/repository:/repository:z

@@ -1,6 +1,11 @@
 version: "3"
-services:
 
+# necessary to set userns_mode: "keep-id" (used only for postgres)
+# see https://github.com/containers/podman-compose/issues/166 for details
+x-podman:
+  in_pod: false
+
+services:
   postgres-mlflow:
     image: postgres:latest
     environment:
@@ -11,6 +16,7 @@ services:
       - 5432:5432
     volumes:
       - ./mlflow/data:/var/lib/postgresql/data:z
+    userns_mode: "keep-id"
 
   minio:
     image: minio/minio:latest
