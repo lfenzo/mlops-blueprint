@@ -1,12 +1,9 @@
 version: "3"
 
-# necessary to set userns_mode: "keep-id" (used only for postgres)
-# see https://github.com/containers/podman-compose/issues/166 for details
-x-podman:
-  in_pod: false
-
 volumes:
-  nexus-data:
+  mlflow-nexus-data:
+  mlflow-postgres-data:
+  mlflow-minio-data:
 
 services:
   postgres-mlflow:
@@ -16,8 +13,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ./mlflow/data:/var/lib/postgresql/data:z
-    userns_mode: "keep-id"
+      - mlflow-postgres-data:/var/lib/postgresql/data:z
 
   minio:
     image: minio/minio:latest
@@ -27,7 +23,7 @@ services:
       - 9000:9000  # S3 API port
       - 9001:9001  # web ui
     volumes:
-      - ./mlflow/artifacts/data:/data:z
+      - mlflow-minio-data:/data:z
     command: server /data --console-address ":9001"
 
   mlflow:
@@ -54,4 +50,5 @@ services:
       - 8081:8081  # web UI
       - 8082:8082  # docker-registry port
     volumes:
-      - nexus-data:/nexus-data
+      - mlflow-nexus-data:/nexus-data
+      - ./mlflow/registry/init-nexus.sh:/opt/sonatype/init-nexus.sh:z
