@@ -5,6 +5,9 @@ version: "3"
 x-podman:
   in_pod: false
 
+volumes:
+  nexus-data:
+
 services:
   postgres-mlflow:
     image: postgres:latest
@@ -44,3 +47,11 @@ services:
       "--default-artifact-root", "s3://mlflow-artifacts",
       "--host", "0.0.0.0"
     ]
+
+  nexus:
+    image: sonatype/nexus3
+    ports:
+      - 8081:8081  # web UI
+      - 8082:8082  # docker-registry port
+    volumes:
+      - nexus-data:/nexus-data
