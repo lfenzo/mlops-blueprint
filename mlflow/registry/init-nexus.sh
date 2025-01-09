@@ -2,9 +2,9 @@
 
 NEXUS_PORT=8081
 NEXUS_HOST="nexus"
-
-ADMIN_PASSWORD=$(cat /nexus-data/admin.password)
 NEW_PASSWORD="condamargens"
+ADMIN_PASSWORD=$(cat /nexus-data/admin.password)
+
 echo "Changing default admin password"
 curl -v -u admin:$ADMIN_PASSWORD -X PUT -v \
   -H "Content-Type: text/plain" \
