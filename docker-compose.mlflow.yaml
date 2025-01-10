@@ -24,6 +24,8 @@ services:
       - 9001:9001  # web ui
     volumes:
       - mlflow-minio-data:/data:z
+      - ./mlflow/artifacts/init-minio.sh:/init-minio.sh:z
+      - ./mlflow/artifacts/policy-list-buckets.json:/policy-list-buckets.json:z
     command: server /data --console-address ":9001"
 
   mlflow:
