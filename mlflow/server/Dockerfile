@@ -1,7 +1,7 @@
 FROM ghcr.io/mlflow/mlflow
 
-ADD requiremsnts.txt /tmp/requiremsnts.txt
+ADD requirements.txt /tmp/requirements.txt
 
 RUN apt update -y && apt install git -y
 
-RUN pip install -r /tmp/requiremsnts.txt
+RUN pip install -r /tmp/requirements.txt

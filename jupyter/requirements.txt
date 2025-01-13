@@ -3,6 +3,8 @@ pandas
 numpy
 scikit-learn
 mlflow
+psutil
+pynvml
 
 # jupyter requirements
 jupyterlab
