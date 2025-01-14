@@ -1,14 +1,14 @@
 version: "3"
 services:
-  server:
+  jupyter:
     build:
-      context: .
+      context: ./jupyter
     volumes:
-      - ./:/jupyter:z
+      - ./jupyter/:/jupyter:z
     ports:
       - 8888:8888
     env_file:
-      - .env
+      - ./jupyter/.env
     command: [
       "bash",
       "-c",

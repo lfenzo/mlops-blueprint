@@ -1,0 +1,56 @@
+version: "3"
+
+volumes:
+  mlflow-nexus-data:
+  mlflow-postgres-data:
+  mlflow-minio-data:
+
+services:
+  mlflow-postgres:
+    image: postgres:latest
+    env_file:
+      - ./mlflow/data/.env
+    ports:
+      - 5432:5432
+    volumes:
+      - mlflow-postgres-data:/var/lib/postgresql/data:z
+
+  mlflow-minio:
+    image: minio/minio:latest
+    env_file:
+      - ./mlflow/artifacts/.env
+    ports:
+      - 9000:9000  # S3 API port
+      - 9001:9001  # web ui
+    volumes:
+      - mlflow-minio-data:/data:z
+      - ./mlflow/artifacts/init-minio.sh:/init-minio.sh:z
+      - ./mlflow/artifacts/policy-list-buckets.json:/policy-list-buckets.json:z
+    command: server /data --console-address ":9001"
+
+  mlflow:
+    build:
+      context: ./mlflow/server
+    depend_on:
+      - minio
+      - postgres
+    ports:
+      - 5000:5000
+    env_file:
+      - ./mlflow/server/.env
+    command: [
+      "mlflow",
+      "server",
+      "--backend-store-uri", "postgresql://postgres:postgres@mlflow-postgres/mlflow-backend-store",
+      "--default-artifact-root", "s3://mlflow-artifacts",
+      "--host", "0.0.0.0"
+    ]
+
+  mlflow-nexus:
+    image: sonatype/nexus3
+    ports:
+      - 8081:8081  # web UI
+      - 8082:8082  # docker-registry port
+    volumes:
+      - mlflow-nexus-data:/nexus-data
+      - ./mlflow/registry/init-nexus.sh:/opt/sonatype/init-nexus.sh:z

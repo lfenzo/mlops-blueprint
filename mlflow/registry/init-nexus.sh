@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 NEXUS_PORT=8081
-NEXUS_HOST="nexus"
+NEXUS_HOST="mlflow-nexus"
 NEW_PASSWORD="condamargens"
 ADMIN_PASSWORD=$(cat /nexus-data/admin.password)
 

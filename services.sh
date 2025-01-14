@@ -1,18 +1,11 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
-set -e
+export AIRFLOW_UID=$(id -u)
+export AIRFLOW_PROJ_DIR=$(pwd)/airflow
 
-ROOT_DIR=$(pwd)
-COMPOSE_FILES=$(find "$ROOT_DIR" -name "docker-compose.yaml")
- 
-# Loop through each Compose file and run the `podman-compose` commands
-for COMPOSE_FILE in $COMPOSE_FILES; do
-    COMPOSE_DIR=$(dirname "$COMPOSE_FILE")
-    echo "Running podman-compose in $COMPOSE_DIR"
-    
-    cd "$COMPOSE_DIR"
-    podman compose "$@"
-    cd "$ROOT_DIR"
-done
-
-echo "All services have been started successfully!"
+podman compose \
+    -f docker-compose.feast.yaml \
+    -f docker-compose.mlflow.yaml \
+    -f docker-compose.airflow.yaml \
+    -f docker-compose.jupyter.yaml \
+    "$@"

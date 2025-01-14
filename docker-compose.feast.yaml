@@ -1,9 +1,9 @@
 version: "3"
 volumes:
-  postgres-data-feast:
+  feast-postgres-data:
 
 services:
-  postgres:
+  feast-postgres:
     image: postgres:latest
     environment:
       POSTGRES_USER: postgres
@@ -12,12 +12,12 @@ services:
     ports:
       - 5433:5432
     volumes:
-      - postgres-data-feast:/var/lib/postgresql/data:z
+      - feast-postgres-data:/var/lib/postgresql/data:z
 
-  service:
+  feast:
     build:
-      context: .
+      context: ./feast
     ports:
       - 8889:8888
     volumes:
-      - ./repository:/repository:z
+      - ./feast/repository:/repository:z

@@ -11,4 +11,4 @@ feast/data/
 airflow/*
 airflow/dags/__pycache__
 !airflow/dags/
-!airflow/init.sh
+docker-compose.airflow.yaml
