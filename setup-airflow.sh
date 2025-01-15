@@ -18,7 +18,4 @@ sed -i "/AIRFLOW__CORE__LOAD_EXAMPLES:/s/'true'/'false'/" $AIRFLOW_COMPOSE_FILE
 mkdir -p ./airflow/{logs,plugins,config}
 chmod -R 777 ./airflow/dags  # we expect a pre-existing airflow/dags dir
 
-export AIRFLOW_UID=$(id -u)
-export AIRFLOW_PROJ_DIR=$(pwd)/airflow
-
-podman compose -f $AIRFLOW_COMPOSE_FILE up airflow-init -d
+docker compose -f $AIRFLOW_COMPOSE_FILE up airflow-init -d

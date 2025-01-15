@@ -1,5 +1,3 @@
-version: "3"
-
 volumes:
   mlflow-nexus-data:
   mlflow-postgres-data:
@@ -31,9 +29,9 @@ services:
   mlflow:
     build:
       context: ./mlflow/server
-    depend_on:
-      - minio
-      - postgres
+    depends_on:
+      - mlflow-minio
+      - mlflow-postgres
     ports:
       - 5000:5000
     env_file:
