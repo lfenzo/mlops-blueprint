@@ -22,7 +22,7 @@ with DAG(
 ) as dag:
 
     REGISTRY = "mlflow-nexus:8082"
-    IMAGE_NAME = "mlflow-best-model";
+    IMAGE_NAME = "mlflow-best-model"
     DATE_TAG = datetime.now().strftime("%Y-%m-%d")
 
     generate_dockerfile = DockerOperator(
