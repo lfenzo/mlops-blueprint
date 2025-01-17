@@ -3,6 +3,16 @@ from airflow import DAG
 from docker.types import Mount
 from airflow.providers.docker.operators.docker import DockerOperator
 
+docker_in_docker_kwargs = {
+    "image": "docker:dind",
+    "privileged": True,
+    "auto_remove": "success",
+    "api_version": "auto",
+    "network_mode": "mlops-blueprint_default",
+    "environment": {
+        "DOCKER_HOST": "unix:///var/run/docker.sock",
+    },
+}
 
 with DAG(
     dag_id="generate-best-model-inference",
@@ -10,6 +20,10 @@ with DAG(
     schedule_interval=None,  # Manual trigger
     catchup=False,
 ) as dag:
+
+    REGISTRY = "mlflow-nexus:8082"
+    IMAGE_NAME = "mlflow-best-model";
+    DATE_TAG = datetime.now().strftime("%Y-%m-%d")
 
     generate_dockerfile = DockerOperator(
         task_id='generate-dockerfile',
@@ -33,33 +47,36 @@ with DAG(
 
     build_image = DockerOperator(
         task_id="build-docker-image",
-        image="docker:dind",
-        privileged=True,
-        auto_remove="success",
-        api_version="auto",
-        network_mode="mlops-blueprint_default",
-        environment={
-            "DOCKER_HOST": "unix:///var/run/docker.sock",
-        },
-        command="""
+        **docker_in_docker_kwargs,
+        command=f"""
             sh -c '
-            DATE_TAG=$(date +%Y-%m-%d);
-            IMAGE_NAME="mlflow-best-model";
-            REGISTRY="http://mlflow-nexus:8082";
-
-            dockerd --insecure-registry $REGISTRY & sleep 10;
-
-            docker build -t $IMAGE_NAME /tmp/model;
-            docker tag $IMAGE_NAME $REGISTRY/$IMAGE_NAME:latest;
-            docker tag $IMAGE_NAME $REGISTRY/$IMAGE_NAME:$DATE_TAG;
+            dockerd --insecure-registry {REGISTRY} & sleep 10;
+            docker build -t {IMAGE_NAME} /tmp/model;
+            docker tag {IMAGE_NAME} {REGISTRY}/{IMAGE_NAME}:latest;
+            docker tag {IMAGE_NAME} {REGISTRY}/{IMAGE_NAME}:{DATE_TAG};
             docker images;
-
-            docker login http://$REGISTRY -u airflow -p airflow;
-            docker push $REGISTRY/$IMAGE_NAME:latest;
-            docker push $REGISTRY/$IMAGE_NAME:$DATE_TAG;
         '""",
         host_tmp_dir="/tmp",
-        mounts=[Mount(source="/tmp", target="/tmp", type="bind")],
+        mounts=[
+            Mount(source="/tmp", target="/tmp", type="bind"),
+            Mount(source="dind-data", target="/var/lib/docker"),
+        ],
     )
 
-    generate_dockerfile >> build_image
+    push_image = DockerOperator(
+        task_id="push-image-to-registry",
+        **docker_in_docker_kwargs,
+        command=f"""
+            sh -c '
+            dockerd --insecure-registry {REGISTRY} & sleep 10;
+            docker images;
+            docker login {REGISTRY} -u airflow -p airflow;
+            docker push {REGISTRY}/{IMAGE_NAME}:latest;
+            docker push {REGISTRY}/{IMAGE_NAME}:{DATE_TAG};
+        '""",
+        mounts=[
+            Mount(source="dind-data", target="/var/lib/docker"),
+        ],
+    )
+
+    generate_dockerfile >> build_image >> push_image
