@@ -1,7 +1,7 @@
 # automatically created
 .ipynb_checkpoints/
+__pycache__/
 
-# automatically populated
 mlflow/artifacts/data/
 mlflow/data/*
 !mlflow/data/.env
@@ -9,6 +9,5 @@ mlflow/data/*
 feast/data/
 
 airflow/*
-airflow/dags/__pycache__
 !airflow/dags/
 docker-compose.airflow.yaml

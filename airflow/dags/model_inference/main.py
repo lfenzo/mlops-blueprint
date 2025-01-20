@@ -2,6 +2,8 @@ from datetime import datetime
 from airflow import DAG
 from docker.types import Mount
 from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.operators.empty import EmptyOperator
+
 
 docker_in_docker_kwargs = {
     "image": "docker:dind",
@@ -15,9 +17,10 @@ docker_in_docker_kwargs = {
 }
 
 with DAG(
-    dag_id="generate-best-model-inference",
+    dag_id="model-inference",
     start_date=datetime(2025, 1, 1),
     schedule_interval=None,  # Manual trigger
+    description="Genrate the inference with the best model from MLFlow",
     catchup=False,
 ) as dag:
 
@@ -79,4 +82,22 @@ with DAG(
         ],
     )
 
-    generate_dockerfile >> build_image >> push_image
+    # TODO: 'mlflow-nexus' is not resolved in the webserver/worker because we are using
+    # the host mount of the docker socket. We will need Docker-In-Docker for that here
+    # After that, the Admin > Connections must be set property
+    launch_inference_server = DockerOperator(
+        task_id="launch-model-inference-server",
+        image="localhost:8082/mlflow-best-model:latest",
+        container_name="mlflow-inference-server",
+        docker_conn_id="mlflow-model-registry",
+        network_mode="mlops-blueprint_default",
+    )
+
+    run_model_inference = DockerOperator(
+        task_id="run-model-inference",
+        image="model-inference-client:latest",
+    )
+
+    remove_inference_server = EmptyOperator(task_id="remove-model-inference-server")
+
+    generate_dockerfile >> build_image >> push_image >> launch_inference_server >> run_model_inference >> remove_inference_server.as_teardown(setups=launch_inference_server)
