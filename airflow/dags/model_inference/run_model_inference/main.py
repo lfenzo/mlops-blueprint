@@ -11,7 +11,7 @@ df = pd.DataFrame(X_test)
 json_object = {"inputs": df.values.tolist()}
 json_string = json.dumps(json_object, indent=4)
 
-url = "http://localhost:8080/invocations"
+url = "http://mlflow-inference-server:8080/invocations"
 
 response = requests.post(url, headers={"Content-Type": "application/json"}, data=json_string)
 

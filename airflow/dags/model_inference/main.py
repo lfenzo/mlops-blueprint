@@ -3,6 +3,7 @@ from airflow import DAG
 from docker.types import Mount
 from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.bash import BashOperator
 
 
 docker_in_docker_kwargs = {
@@ -31,11 +32,15 @@ with DAG(
     generate_dockerfile = DockerOperator(
         task_id='generate-dockerfile',
         auto_remove="success",
-        image='ghcr.io/mlflow/mlflow',
+        image='ghcr.io/mlflow/mlflow:v2.19.0',
         command="""
             sh -c '
+            set -e;
             pip install boto3;
-            mlflow models generate-dockerfile --model-uri models:/test-model/1 -d /tmp/model;
+            mlflow models generate-dockerfile \
+                --model-uri models:/test-model/1 \
+                --env-manager virtualenv \
+                --output-directory /tmp/model
         '""",
         network_mode="mlops-blueprint_default",
         environment={
@@ -53,6 +58,7 @@ with DAG(
         **docker_in_docker_kwargs,
         command=f"""
             sh -c '
+            set -e;
             dockerd --insecure-registry {REGISTRY} & sleep 10;
             docker build -t {IMAGE_NAME} /tmp/model;
             docker tag {IMAGE_NAME} {REGISTRY}/{IMAGE_NAME}:latest;
@@ -71,6 +77,7 @@ with DAG(
         **docker_in_docker_kwargs,
         command=f"""
             sh -c '
+            set -e;
             dockerd --insecure-registry {REGISTRY} & sleep 10;
             docker images;
             docker login {REGISTRY} -u airflow -p airflow;
@@ -82,22 +89,38 @@ with DAG(
         ],
     )
 
-    # TODO: 'mlflow-nexus' is not resolved in the webserver/worker because we are using
-    # the host mount of the docker socket. We will need Docker-In-Docker for that here
-    # After that, the Admin > Connections must be set property
-    launch_inference_server = DockerOperator(
+    launch_inference_server = BashOperator(
         task_id="launch-model-inference-server",
-        image="localhost:8082/mlflow-best-model:latest",
-        container_name="mlflow-inference-server",
-        docker_conn_id="mlflow-model-registry",
-        network_mode="mlops-blueprint_default",
+        bash_command="""
+            docker run -d \
+            --network mlops-blueprint_default \
+            --name mlflow-inference-server \
+            localhost:8082/mlflow-best-model:latest \
+            sh -c 'mlflow models serve -m /opt/ml/model -p 8080 -h 0.0.0.0 & sleep 10;'
+        """,
     )
 
     run_model_inference = DockerOperator(
         task_id="run-model-inference",
-        image="model-inference-client:latest",
+        image="run-model-inference",
+        network_mode="mlops-blueprint_default",
+        container_name="inference-runner",
+        auto_remove="force",
     )
 
-    remove_inference_server = EmptyOperator(task_id="remove-model-inference-server")
+    remove_inference_server = BashOperator(
+        task_id="remove-inference-server",
+        bash_command="""
+            docker stop mlflow-inference-server;
+            docker rm --force mlflow-inference-server;
+        """,
+    )
 
-    generate_dockerfile >> build_image >> push_image >> launch_inference_server >> run_model_inference >> remove_inference_server.as_teardown(setups=launch_inference_server)
+    (
+        generate_dockerfile
+        >> build_image
+        >> push_image
+        >> launch_inference_server
+        >> run_model_inference
+        >> remove_inference_server.as_teardown(setups=launch_inference_server)
+    )
