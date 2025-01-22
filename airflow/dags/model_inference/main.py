@@ -105,7 +105,12 @@ with DAG(
         image="run-model-inference",
         network_mode="mlops-blueprint_default",
         container_name="inference-runner",
-        auto_remove="force",
+        auto_remove="success",
+        command="--output /tmp/predictions.txt",
+        host_tmp_dir="/tmp",
+        mounts=[
+            Mount(source="/tmp", target="/tmp", type="bind"),
+        ],
     )
 
     remove_inference_server = BashOperator(
@@ -116,6 +121,10 @@ with DAG(
         """,
     )
 
+    upload_predictions = EmptyOperator(
+        task_id="upload-predictions",
+    )
+
     (
         generate_dockerfile
         >> build_image
@@ -123,4 +132,5 @@ with DAG(
         >> launch_inference_server
         >> run_model_inference
         >> remove_inference_server.as_teardown(setups=launch_inference_server)
+        >> upload_predictions
     )
