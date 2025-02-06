@@ -2,12 +2,7 @@
 .ipynb_checkpoints/
 __pycache__/
 
-mlflow/artifacts/data/
-mlflow/data/*
-!mlflow/data/.env
-
 feast/data/
 
 airflow/*
 !airflow/dags/
-docker-compose.airflow.yaml
